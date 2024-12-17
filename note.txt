@@ -1,0 +1,91 @@
+equation = ''
+
+# Simulazione del processo di lettura dei dati (puoi sostituire train_data e model con i tuoi)
+for i in range(len(train_data)):
+    train_data[i] = np.array(train_data[i])
+    train_data[i] = train_data[i].reshape(1, 28, 28, 1)
+    result = np.argmax(model.predict(train_data[i]), axis=-1)
+
+    for j in range(10):
+        if result[0] == j:
+            equation = equation + str(j)
+
+    if result[0] == 10:
+        equation = equation + "+"
+    if result[0] == 11:
+        equation = equation + "-"
+    if result[0] == 12:
+        equation = equation + "*"
+    if result[0] == 13:
+        equation = equation + "/"
+    if result[0] == 14:
+        equation = equation + "="
+    if result[0] == 15:
+        equation = equation + "."
+    if result[0] == 16:
+        equation = equation + "x"
+    if result[0] == 17:
+        equation = equation + "y"
+    if result[0] == 18:
+        equation = equation + "z"
+
+print("Your Equation:", equation)
+
+# Verifica se c'è un segno di uguale nell'equazione
+if "=" in equation:
+    left_side, right_side = equation.split('=')
+
+    print("left_side =", left_side)
+    print("right_side =", right_side)
+
+    # Verifica se la parte sinistra è la definizione di una variabile (ad es. "y =")
+    if left_side.strip() in ['x', 'y', 'z']:  # Variabili considerate
+        variable_name = left_side.strip()
+
+        # Cerchiamo un'assegnazione diretta del valore alla variabile
+        direct_assignment = re.search(r'(\d+(\.\d+)?)', right_side)
+        
+        if direct_assignment:
+            # Se troviamo un'assegnazione diretta, usiamo quel valore
+            variable_value = float(direct_assignment.group(1))
+        else:
+            # Altrimenti, cerchiamo di risolvere l'equazione per la variabile
+            try:
+                # Rimuoviamo la variabile dal lato destro
+                right_side_without_var = re.sub(r'\b' + variable_name + r'\b', '', right_side)
+                # Risolviamo l'equazione
+                variable_value = eval(right_side_without_var)
+            except:
+                print(f"Impossibile calcolare il valore di {variable_name}")
+                variable_value = None
+
+        if variable_value is not None:
+            print(f"Il valore calcolato per {variable_name} è: {variable_value}")
+
+            # Ora possiamo usare questo valore nell'espressione originale
+            right_side_cleaned = re.sub(r'\d*\.?\d*\*?' + variable_name, variable_name, right_side)
+            try:
+                new_expression = right_side_cleaned.replace(variable_name, str(variable_value))
+                # Sostituiamo il punto decimale con una virgola per evitare problemi con eval()
+                new_expression = new_expression.replace(',', '.')
+                final_result = eval(new_expression)
+                print(f"Il risultato finale dell'espressione '{right_side_cleaned}' è:", final_result)
+            except Exception as e:
+                print("Errore durante la valutazione della nuova espressione:", e)
+        else:
+            print("Impossibile calcolare il risultato finale.")
+    else:
+        try:
+            # Se non è una definizione di variabile, calcola normalmente
+            result = eval(left_side)
+            print("The result of the equation is:", result)
+        except Exception as e:
+            print("Error while evaluating the equation :", e)
+
+else:
+    # Se non c'è un segno di uguale, calcola direttamente l'espressione
+    try:
+        result = eval(equation)
+        print("The result of the expression is:", result)
+    except Exception as e:
+        print("Error while evaluating the expression:", e)
